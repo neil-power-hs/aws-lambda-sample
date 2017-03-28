@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/lambda-sample_main.iml" filepath="$PROJECT_DIR$/.idea/modules/lambda-sample_main.iml" group="lambda-sample" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/lambda-sample_test.iml" filepath="$PROJECT_DIR$/.idea/modules/lambda-sample_test.iml" group="lambda-sample" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/sample-lambda.iml" filepath="$PROJECT_DIR$/.idea/modules/sample-lambda.iml" />
+      <module fileurl="file://$PROJECT_DIR$/scripts/scripts.iml" filepath="$PROJECT_DIR$/scripts/scripts.iml" />
+    </modules>
+  </component>
+</project>

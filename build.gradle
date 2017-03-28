@@ -1,0 +1,159 @@
+apply plugin: 'java'
+apply plugin: 'antlr'
+
+buildscript {
+    ext {
+        version = '1.0.0'
+        stagingCredentials = 'sample-lambda-staging'
+        productionCredentials = 'sample-lambda-staging'
+
+        stagingEnv = 'staging'
+        productionEnv = 'production'
+
+        baseBucket = bucketName
+        baseFolderRemote = 'sample_lambda/'
+        baseFileRemote = 'sample-lambda-'
+        baseFileLocal = '../build/distributions/sample-lambda-'
+
+        scriptsDir = './scripts/'
+    }
+    repositories {
+        mavenCentral()
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile(
+            'com.amazonaws:aws-lambda-java-core:1.1.0',
+            'com.amazonaws:aws-lambda-java-events:1.1.0'
+    )
+    compile group: 'org.json', name: 'json', version: '20160212'
+    compile 'com.google.code.gson:gson:2.7'
+    antlr "org.antlr:antlr4:4.5.3"
+    testCompile group: 'junit', name: 'junit', version: '4.11'
+    testCompile 'com.amazonaws:aws-java-sdk-lambda:1.11.46'
+}
+
+task buildZip(type: Zip) {
+    from compileJava
+    from processResources
+    into('lib') {
+        from configurations.runtime
+    }
+}
+
+task createS3Resources(type: Exec) {
+    workingDir "$rootProject.ext.scriptsDir"
+    commandLine 'python', 'createBucketAndFolder.py',
+            "$rootProject.ext.baseBucket",
+            "$rootProject.ext.baseFolderRemote"
+}
+
+task uploadStaging(type: Exec, dependsOn: buildZip) {
+    workingDir "$rootProject.ext.scriptsDir"
+    commandLine 'python', 'uploadToS3.py',
+            "$rootProject.ext.stagingEnv",
+            "$rootProject.ext.baseFileLocal" + "$rootProject.ext.version" + '.zip',
+            "$rootProject.ext.baseBucket",
+            "$rootProject.ext.baseFolderRemote" + "$rootProject.ext.stagingEnv" + "/" + "$rootProject.ext.baseFileRemote" + "$rootProject.ext.version" + ".zip"
+}
+
+task uploadProduction(type: Exec, dependsOn: buildZip) {
+    workingDir "$rootProject.ext.scriptsDir"
+    commandLine 'python', 'uploadToS3.py',
+            "$rootProject.ext.productionEnv",
+            "$rootProject.ext.baseFileLocal" + "$rootProject.ext.version" + '.zip',
+            "$rootProject.ext.baseBucket",
+            "$rootProject.ext.baseFolderRemote" + "$rootProject.ext.productionEnv" + "/" + "$rootProject.ext.baseFileRemote" + "$rootProject.ext.version" + ".zip"
+}
+
+task updateFunctionCodeStaging(type: Exec, dependsOn: uploadStaging) {
+    workingDir "$rootProject.ext.scriptsDir"
+    commandLine 'python', 'updateFunctionCode.py',
+            "$rootProject.ext.stagingEnv",
+            "$rootProject.ext.version",
+            "$rootProject.ext.baseBucket"
+}
+
+task updateFunctionCodeProduction(type: Exec, dependsOn: uploadProduction) {
+    workingDir "$rootProject.ext.scriptsDir"
+    commandLine 'python', 'updateFunctionCode.py',
+            "$rootProject.ext.productionEnv",
+            "$rootProject.ext.version",
+            "$rootProject.ext.baseBucket"
+}
+
+task publishLambdaStaging(type: Exec) {
+    workingDir "$rootProject.ext.scriptsDir"
+    commandLine 'python', 'publishLambdaVersion.py',
+            "$rootProject.ext.stagingEnv",
+            "$rootProject.ext.version"
+}
+
+task publishLambdaProduction(type: Exec) {
+    workingDir "$rootProject.ext.scriptsDir"
+    commandLine 'python', 'publishLambdaVersion.py',
+            "$rootProject.ext.productionEnv",
+            "$rootProject.ext.version"
+}
+
+task createAliasStaging(type: Exec) {
+    workingDir "$rootProject.ext.scriptsDir"
+    commandLine 'python', 'createLambdaAlias.py',
+            "$rootProject.ext.stagingEnv",
+            "$rootProject.ext.version",
+            aliasName,
+            lambdaVersion
+}
+
+task createAliasProduction(type: Exec) {
+    workingDir "$rootProject.ext.scriptsDir"
+    commandLine 'python', 'createLambdaAlias.py',
+            "$rootProject.ext.productionEnv",
+            "$rootProject.ext.version",
+            aliasName,
+            lambdaVersion
+}
+
+task updateAliasStaging(type: Exec) {
+    workingDir "$rootProject.ext.scriptsDir"
+    commandLine 'python', 'updateLambdaAlias.py',
+            "$rootProject.ext.stagingEnv",
+            "$rootProject.ext.version",
+            aliasName,
+            lambdaVersion
+}
+
+task updateAliasProduction(type: Exec) {
+    workingDir "$rootProject.ext.scriptsDir"
+    commandLine 'python', 'updateLambdaAlias.py',
+            "$rootProject.ext.productionEnv",
+            "$rootProject.ext.version",
+            aliasName,
+            lambdaVersion
+}
+
+test {
+    dependsOn 'cleanTest'
+    logger.warn "Testing in environment: " + testEnvironment
+    environment 'testEnvironment', testEnvironment
+    afterTest { desc, result ->
+        println "${result.resultType}: ${desc.name} [${desc.className}]"
+    }
+}
+
+build.dependsOn buildZip
+version "$rootProject.ext.version"
+group 'com.hootsuite.example'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testCompile group: 'junit', name: 'junit', version: '4.11'
+}
