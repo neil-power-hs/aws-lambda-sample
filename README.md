@@ -12,14 +12,14 @@
 
 ## <a name="TOC-Introduction"></a>Introduction ##
 
-This project is a "Hello, World!" version of the architecture described in [this blog post](http://code.hootsuite.com/accelerating-cross-platform-development-with-serverless-microservices/). 
+This project is a "Hello, World!" version of the architecture described in [this blog post](http://code.hootsuite.com/accelerating-cross-platform-development-with-serverless-microservices/).
 
-With it you can create an [AWS Lambda](https://aws.amazon.com/lambda/) function and surrounding IAM infrastructure with [Terraform](https://www.terraform.io/). 
+With it you can create an [AWS Lambda](https://aws.amazon.com/lambda/) function and surrounding IAM infrastructure with [Terraform](https://www.terraform.io/).
 
 The Lambda function is managed with [Gradle](https://gradle.org/) and [boto3](https://github.com/boto/boto3) scripts and run unit tests against your newly deployed function.
 
 The Lambda function code can be found in the `src/main/java/com/hootsuite/example/lambda/SampleLambda.java` file. This Lambda code is meant to be a simple "Hello, World!" example which you can modify to your needs.
- 
+
 ## <a name="TOC-KeyFeatures"></a>Key Features ##
 
 This project allows you to:
@@ -34,12 +34,12 @@ This project allows you to:
 ### AWS ###
 
 You will need an Amazon AWS account, you can sign up [here](https://aws.amazon.com/account/). In order to create the resources in this project, you will need to have permissions to create infrastructure in this account.
- 
+
 *IMPORTANT* Following the steps in this project may incur a small cost to the associated AWS account.
 
 ### boto3 ###
 
-The AWS Lambda function is managed with Gradle scripts invoking [boto3](https://github.com/boto/boto3) scripts. 
+The AWS Lambda function is managed with Gradle scripts invoking [boto3](https://github.com/boto/boto3) scripts.
 
 * If you do not have `python`, you will need to install it, instructions can be found [here](https://www.python.org/)
 * If you do not have `pip`, you will need to install it, instructions can be found [here](https://pip.pypa.io/en/stable/installing/)
@@ -48,7 +48,7 @@ The AWS Lambda function is managed with Gradle scripts invoking [boto3](https://
 
 ### pyyaml ###
 
-This is a yaml parser for python, used to read the AWS credentials from the configuration files. 
+This is a yaml parser for python, used to read the AWS credentials from the configuration files.
 
 * You will need to install `pyyaml`.
 ** From your terminal, enter: `sudo pip install pyyaml==3.12`.
@@ -84,7 +84,7 @@ a. Choose a unique name for your S3 bucket, into which the Lambda files will be 
 
 b. In the `gradle.properties` file, replace the `<your-bucket-name>` with a unique bucket name for the project.
     `bucketName=<your-bucket-name>`
-    
+
 c. From the root directory of the project, run `./gradlew createS3Resources`. This will create an S3 bucket with the name above, as well as a folder in the bucket for the Lambda resources.
 
 d. After creating the bucket, you should place your bucket name into the `terraform/env/staging.tfvars` file, on the following line:
@@ -97,7 +97,7 @@ Now we have an S3 bucket and folder, into which our Lambda code will be placed.
 Here we will build the `.zip` artifact of the AWS Lambda code.
 
 a. From the root directory run `./gradlew clean buildZip` in the terminal. This will compile the AWS Lambda function into a .zip artifact which we will later upload to AWS Lambda.
- 
+
 b. The build should succeed and you should see `sample-lambda-1.0.0.zip` in the `build/distributions` directory.
 
 Now we have an initial .zip artifact of our Lambda source code which will be uploaded to create the AWS Lambda function.
@@ -109,8 +109,8 @@ In this step we will create the staging infrastructure in AWS, including our Lam
 a. From the project root directory, enter `cd terraform` into the the terminal.
 
 b. To use terraform to plan the infrastructure that needs to be created, run the following command in your terminal:
-    `terraform plan --var-file="../aws_secrets.tfvars" -var-file="env/staging.tfvars"` 
-    
+    `terraform plan --var-file="../aws_secrets.tfvars" -var-file="env/staging.tfvars"`
+
 c. Ensure that the plan says `Plan: 9 to add, 0 to change, 0 to destroy.` This means that 9 resources are to be created when we apply the plan.
 
 d. If the plan is successful, apply it by entering the following command into the terminal:
@@ -133,7 +133,7 @@ Here we will extract the credentials from the newly created user which only has 
 
 a. In the terminal enter:
     `terraform show`
-    
+
 b. You can scroll through the output and you should see that two sets of access keys have been created.
 
 c. Look for the following block with `sample_lambda_invoker` in the output, with `<id>` and `<password>` being the real id and password in your output:
@@ -147,7 +147,7 @@ aws_iam_access_key.sample_lambda_invoker:
   user = sample_lambda_invoker_staging
 ```
 
-d. This user has been created to only invoke the Lambda function and so we need to place it in the Java code where the unit tests will eventually invoke our AWS Lambda function. 
+d. This user has been created to only invoke the Lambda function and so we need to place it in the Java code where the unit tests will eventually invoke our AWS Lambda function.
 
 e. Copy the value of the `<id>` and the `<secret>`.
 f. Place them, in order, on line 16 of the `AwsLambdaCredentialsProvider` java class in the `src/test/java/com/hootsuite/example/lambda/environment/` folder.
@@ -169,7 +169,7 @@ Here we will extract the user we use to manage the Lambda function. The user is 
 a. From the `terraform` directory, run the following command again:
     `terraform show`
 
-b. Now look for the following block. 
+b. Now look for the following block.
 
 ```
 aws_iam_access_key.sample_lambda_jenkins:
@@ -181,8 +181,8 @@ aws_iam_access_key.sample_lambda_jenkins:
 ```
 
 c. Again copy the `<id>` and `<secret>` values.
- 
-d. This time, we will place them in the `aws_credentials.yml` file. The file should look like: 
+
+d. This time, we will place them in the `aws_credentials.yml` file. The file should look like:
 ```
 staging_access_key = "<id>"
 staging_secret_key = "<secret>"
@@ -193,18 +193,18 @@ production_secret_key = ""
 
 e. Place your `<id>` and `<secret>` into the file where marked above. For now, ignore the production access key and secret key as we are only creating a staging environment in this example.
 
-Now we have a user which has permissions to manage the Lambda function which will be used when we invoke the boto3 scripts through gradle tasks. 
+Now we have a user which has permissions to manage the Lambda function which will be used when we invoke the boto3 scripts through gradle tasks.
 
 ### 6. Uploading the Artifact to S3 ###
 
 Now that we have a user with permissions to do so, we will upload our artifact to S3.
 
-a. Cd into the project's root directory. 
+a. Cd into the project's root directory.
 
 b. From the root project directory run the following command in the terminal:
-    `./gradlew uploadStaging` 
-   
-* The artifact we compiled should now be uploaded to S3. 
+    `./gradlew uploadStaging`
+
+* The artifact we compiled should now be uploaded to S3.
 
 ### 7. Modifying our Lambda to pull the artifact from S3 ###
 
@@ -214,7 +214,7 @@ a. In the `terraform/main.tf` file. Comment out line 4 with `//` or `#`:
 
 `   filename = "../build/distributions/sample-lambda-1.0.0.zip"`
 
-b. Also uncomment lines 5 and 6 in the file. 
+b. Also uncomment lines 5 and 6 in the file.
 
 ```
    s3_bucket = "${var.bucket}"
@@ -226,8 +226,8 @@ c. Switch to the `terraform` directory in your terminal:
     `cd terraform`
 
 d. We will now re-run the planning stage to change the infrastructure. Enter the following in the terminal:
-    `terraform plan --var-file="../aws_secrets.tfvars" -var-file="env/staging.tfvars"` 
-        
+    `terraform plan --var-file="../aws_secrets.tfvars" -var-file="env/staging.tfvars"`
+
 e. This time, you should only see that there is only 1 resource to change:
 
 ```
@@ -260,7 +260,7 @@ Now we have our function set to pull artifacts from S3 to run. This means that w
 
 Here we will run the unit tests from `src/test/java/com/hootsuite/example/lambda/SampleTest.java`. These tests can be configured to run locally (without going through the Lambda function) or end-to-end (through the Lambda function).
 
-a. Switch to the root directory of the project in your terminal. 
+a. Switch to the root directory of the project in your terminal.
 
 b. From the project root directory, run the following command in the terminal:
     `./gradlew clean -PtestEnvironment=LOCAL test`.
@@ -314,9 +314,9 @@ buildscript {
 
 b. From the project root directory, run `./gradlew clean updateFunctionCodeStaging`.
 
-The above command will build a new zip file, version 1.0.1 and then upload it to S3. Our AWS Lambda Function will be updated to pull the new code from S3. 
- 
-Our unit-testing client is set to invoke the latest version of the Lambda Function code, later we will see how we can lock clients to Aliases and versions. 
+The above command will build a new zip file, version 1.0.1 and then upload it to S3. Our AWS Lambda Function will be updated to pull the new code from S3.
+
+Our unit-testing client is set to invoke the latest version of the Lambda Function code, later we will see how we can lock clients to Aliases and versions.
 
 This one command is all that is needed to update the Lamdba function code, after the initial runs, Terraform is not needed to manage the function.
 
@@ -363,7 +363,7 @@ e. As shown in the image below, tap on `Attach existing policies directly`.
 <img src="./images/4_attach_policy.png"/>
 
 f. Now click the `Create policy` button as shown below.
- 
+
 <img src="./images/5_create_policy.png"/>
 
 This should open a new browser window where we will create the policy that your Terraform user will need to create and manage the project infrastructure.
@@ -453,7 +453,10 @@ c. Where it says `<paste policy here>`, paste the JSON snippet below.
                 "iam:ListAccessKeys",
                 "iam:ListPolicies",
                 "iam:ListUserPolicies",
-                "iam:ListUsers"
+                "iam:ListUsers",
+                "iam:PutUserPolicy",
+                "iam:PassRole",
+                "iam:PutRolePolicy"
             ],
             "Resource": [
                 "*"
@@ -467,7 +470,7 @@ d. Now click on the `Create Policy` button and we are done creating the policy, 
 
 ### 4. Attaching the Policy the the Terraform User ###
 
-Now that we created the policy we will attach it to the user. 
+Now that we created the policy we will attach it to the user.
 
 a. Click `Refresh` to refresh the list of policies to include our newly created policy.
 
@@ -490,7 +493,7 @@ Now we have our user, we only need to copy the keys to this project.
 ### 5. Copy the newly created keys to this project ###
 
 a. As shown in the image below, copy the `Access key ID` of the newly created user.
- 
+
 <img src="./images/12_copy_keys.png"/>
 
 b. Open up the `aws_secrets.tfvars` file in the root directory of this project and replace the `<your_access_key>` with your copied access key. The file is shown below:
