@@ -17,5 +17,7 @@ data "template_file" "jenkins_user_policy" {
   vars {
     env = "${var.env}"
     bucket = "${var.bucket}"
+    region = "${var.region}"
+    account = "${var.account}"
   }
 }

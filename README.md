@@ -78,7 +78,11 @@ See the [Create AWS User to run Terraform](#TOC-CreateUser) section of this READ
 
 ## <a name="TOC-Installation"></a>Installation ##
 
-### 1. Creating an S3 Bucket and Folder for the AWS Lambda Resources ###
+### 1. Creating the AWS User to run Terraform ###
+
+See the [Create AWS User to run Terraform](#TOC-CreateUser) section of this README and complete those steps.
+
+### 2. Creating an S3 Bucket and Folder for the AWS Lambda Resources ###
 
 Here we will create an S3 bucket and folder to hold the AWS Lambda artifacts.
 
@@ -99,7 +103,7 @@ f. After creating the bucket, you should place your bucket name into the `terraf
 
 Now we have an S3 bucket and folder, into which our Lambda code will be placed.
 
-### 2. Building the initial Java artifact for AWS Lambda ###
+### 3. Building the initial Java artifact for AWS Lambda ###
 
 Here we will build the `.zip` artifact of the AWS Lambda code.
 
@@ -109,7 +113,7 @@ b. The build should succeed and you should see `sample-lambda-1.0.0.zip` in the 
 
 Now we have an initial .zip artifact of our Lambda source code which will be uploaded to create the AWS Lambda function.
 
-### 3. Running Terraform to create staging infrastructure ###
+### 4. Running Terraform to create staging infrastructure ###
 
 In this step we will create the staging infrastructure in AWS, including our Lambda function, as well as the IAM resources to invoke and manage it.
 
@@ -134,7 +138,7 @@ use the `terraform show` command.
 
 Now we have created the infrastructure in AWS which will we use to run and manage the Lambda function.
 
-### 4. Extracting the IAM user for invoking the AWS Lambda Function ###
+### 5. Extracting the IAM user for invoking the AWS Lambda Function ###
 
 Here we will extract the credentials from the newly created user which only has permissions to invoke the Lambda function. We will use this user with our Java test client to invoke the function.
 
@@ -169,7 +173,7 @@ Replace the `<id>` with the generated id and `<secret>` with the generated secre
 
 Now we have given permissions to the unit tests to invoke our Lambda function.
 
-### 5. Extracting the IAM user for managing the AWS Lambda Function ###
+### 6. Extracting the IAM user for managing the AWS Lambda Function ###
 
 Here we will extract the user we use to manage the Lambda function. The user is named `sample_lambda_jenkins`. This is because in our production Lambda deployment, we are using [Jenkins](https://jenkins.io/) to run jobs which manage our Lambda code. The credentials generated here are embedded in our Jenkins machine. For this simple introduction, you will play the role of Jenkins, managing the AWS Lambda function yourself.
 
@@ -202,7 +206,7 @@ e. Place your `<id>` and `<secret>` into the file where marked above. For now, i
 
 Now we have a user which has permissions to manage the Lambda function which will be used when we invoke the boto3 scripts through gradle tasks.
 
-### 6. Uploading the Artifact to S3 ###
+### 7. Uploading the Artifact to S3 ###
 
 Now that we have a user with permissions to do so, we will upload our artifact to S3.
 
@@ -213,7 +217,7 @@ b. From the root project directory run the following command in the terminal:
 
 * The artifact we compiled should now be uploaded to S3.
 
-### 7. Modifying our Lambda to pull the artifact from S3 ###
+### 8. Modifying our Lambda to pull the artifact from S3 ###
 
 Currently, our AWS Lambda function uses an artifact uploaded directly to AWS Lambda. In order to effectively manage and version our Lambda function, we will need to change the function to pull code from the S3 bucket we previously created.
 
@@ -263,7 +267,7 @@ Now we have our function set to pull artifacts from S3 to run. This means that w
 
 ## <a name="TOC-RunModify"></a>Running and Modifying the Function ##
 
-### 8. Running the Tests to ensure deployment ###
+### 9. Running the Tests to ensure deployment ###
 
 Here we will run the unit tests from `src/test/java/com/hootsuite/example/lambda/SampleTest.java`. These tests can be configured to run locally (without going through the Lambda function) or end-to-end (through the Lambda function).
 
@@ -278,7 +282,7 @@ c. From the project root directory, run `./gradlew clean -PtestEnvironment=STAGI
 
 These tests are hitting the newly deployed Lambda! Again two will pass and two fill fail. These are the first invocations of your Lambda function!
 
-### 9. Modifying the Lambda function to fix the breaking tests ###
+### 10. Modifying the Lambda function to fix the breaking tests ###
 
 Now we will modify the Lambda function code to exhibit the expected behavior.
 
@@ -308,7 +312,7 @@ d. From the project root directory, run `./gradlew clean -PtestEnvironment=STAGI
 
 The two tests should still be failing since we haven't uploaded the new code to AWS Lambda.
 
-### 10. Updating the AWS Lamdba code ###
+### 11. Updating the AWS Lamdba code ###
 
 a. Update the version of the code in the `build.gradle` file on line 6 to 1.0.1.
 
@@ -317,7 +321,6 @@ buildscript {
     ext {
         version = '1.0.1'
 ```
-
 
 b. From the project root directory, run `./gradlew clean updateFunctionCodeStaging`.
 

@@ -16,5 +16,7 @@ data "template_file" "lambda_invoker_policy" {
   template = "${file("templates/iam_lambda_invoker_user_policy.json.hcl.tpl")}"
   vars {
     env = "${var.env}"
+    region = "${var.region}"
+    account = "${var.account}"
   }
 }
