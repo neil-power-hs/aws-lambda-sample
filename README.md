@@ -33,7 +33,9 @@ This project allows you to:
 
 ### AWS ###
 
-You will need an Amazon AWS account, you can sign up [here](https://aws.amazon.com/account/). In order to create the resources in this project, you will need to have permissions to create infrastructure in this account.
+You will need an Amazon AWS account, you can sign up [here](https://aws.amazon.com/account/).
+ 
+In order to create the resources in this project, you will need to have permissions to create infrastructure in this account.
 
 *IMPORTANT* Following the steps in this project may incur a small cost to the associated AWS account.
 
@@ -80,14 +82,19 @@ See the [Create AWS User to run Terraform](#TOC-CreateUser) section of this READ
 
 Here we will create an S3 bucket and folder to hold the AWS Lambda artifacts.
 
-a. Choose a unique name for your S3 bucket, into which the Lambda files will be placed. The bucket name has to be unique across all buckets in AWS S3.
+a. In your browser, navigate to `https://console.aws.amazon.com/billing/home?#/account`.
 
-b. In the `gradle.properties` file, replace the `<your-bucket-name>` with a unique bucket name for the project.
+b. Copy the account number you see next to `Account Id:` into the `terraform/env/staging.tfvars` file, on the following line:
+    `account = "<your-account-number>"`
+
+c. Choose a unique name for your S3 bucket, into which the Lambda files will be placed. The bucket name has to be unique across all buckets in AWS S3.
+
+d. In the `gradle.properties` file, replace the `<your-bucket-name>` with a unique bucket name for the project.
     `bucketName=<your-bucket-name>`
 
-c. From the root directory of the project, run `./gradlew createS3Resources`. This will create an S3 bucket with the name above, as well as a folder in the bucket for the Lambda resources.
+e. From the root directory of the project, run `./gradlew createS3Resources`. This will create an S3 bucket with the name above, as well as a folder in the bucket for the Lambda resources.
 
-d. After creating the bucket, you should place your bucket name into the `terraform/env/staging.tfvars` file, on the following line:
+f. After creating the bucket, you should place your bucket name into the `terraform/env/staging.tfvars` file, on the following line:
     `bucket = "<your-bucket-name>"`
 
 Now we have an S3 bucket and folder, into which our Lambda code will be placed.

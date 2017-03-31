@@ -14,3 +14,7 @@ variable "region" {
 variable "bucket" {
   description = "The S3 bucket to place the Lambda code into"
 }
+
+variable "account" {
+  description = "Your AWS Account number"
+}

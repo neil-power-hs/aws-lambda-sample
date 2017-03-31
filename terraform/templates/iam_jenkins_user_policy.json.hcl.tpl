@@ -49,7 +49,7 @@
                 "lambda:UpdateAlias",
                 "lambda:UpdateFunctionCode"
             ],
-            "Resource": "arn:aws:lambda:us-east-1:372111772233:function:sampleLambda_${env}"
+            "Resource": "arn:aws:lambda:${region}:${account}:function:sampleLambda_${env}"
         }
     ]
 }
