@@ -1,7 +1,7 @@
 resource "aws_lambda_function" "sample_lambda" {
 
     filename = "../build/distributions/sample-lambda-1.0.0.zip"
-  // TODO STEP 7 Comment out the 'filename' line above and uncomment the 's3_bucket' and 's3_key' lines below
+  // TODO STEP 8 Comment out the 'filename' line above and uncomment the 's3_bucket' and 's3_key' lines below
 //   s3_bucket = "${var.bucket}"
 //   s3_key = "sample_lambda/${var.env}/sample-lambda-1.0.0.zip"
 

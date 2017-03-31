@@ -290,7 +290,7 @@ a. Now we'll change the Lambda function. In `src/main/java/com/hootsuite/example
 
 ```
 //         return (request == 0) ? "ZERO" : "GREATER THAN ZERO";
-        // TODO STEP 9 Comment out the line above and uncomment the lines below
+        // TODO STEP 10 Comment out the line above and uncomment the lines below
         switch (request) {
             case 0: return "ZERO";
             case 2: return "TWO";
