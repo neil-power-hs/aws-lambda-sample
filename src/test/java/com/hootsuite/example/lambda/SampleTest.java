@@ -29,12 +29,18 @@ public class SampleTest {
     }
 
     @Test
-    public void secondZeroTest() {
+    public void twoTest() {
          assertEquals(STRING_MISMATCH, "TWO", lambdaGenerator.invoke(2));
     }
 
     @Test
-    public void secondNonZeroTest() {
+    public void threeTest() {
          assertEquals(STRING_MISMATCH, "THREE", lambdaGenerator.invoke(3));
     }
+
+    // TODO Uncomment to add a new test
+//    @Test
+//    public void fourTest() {
+//        assertEquals(STRING_MISMATCH, "FOUR", lambdaGenerator.invoke(4));
+//    }
 }

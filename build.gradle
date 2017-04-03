@@ -35,7 +35,7 @@ dependencies {
     compile 'com.google.code.gson:gson:2.7'
     antlr "org.antlr:antlr4:4.5.3"
     testCompile group: 'junit', name: 'junit', version: '4.11'
-    testCompile 'com.amazonaws:aws-java-sdk-lambda:1.11.46'
+    testCompile 'com.amazonaws:aws-java-sdk-lambda:1.11.113'
 }
 
 task buildZip(type: Zip) {
@@ -149,11 +149,3 @@ test {
 build.dependsOn buildZip
 version "$rootProject.ext.version"
 group 'com.hootsuite.example'
-
-repositories {
-    mavenCentral()
-}
-
-dependencies {
-    testCompile group: 'junit', name: 'junit', version: '4.11'
-}

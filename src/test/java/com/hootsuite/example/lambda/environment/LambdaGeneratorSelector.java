@@ -16,9 +16,9 @@ public class LambdaGeneratorSelector {
             case LOCAL_ENV:
                 return new LocalStringGenerator();
             case STAGING_ENV:
-                return new AWSLambdaGenerator(AWSLambdaEnvironmentInvoker.LambdaType.STAGING);
+                return new AWSLambdaInvoker(AWSLambdaInvoker.LambdaType.STAGING);
             case PRODUCTION_ENV:
-                return new AWSLambdaGenerator(AWSLambdaEnvironmentInvoker.LambdaType.PRODUCTION);
+                return new AWSLambdaInvoker(AWSLambdaInvoker.LambdaType.PRODUCTION);
             default:
                 return new LocalStringGenerator();
         }

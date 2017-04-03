@@ -14,5 +14,14 @@ public class SampleLambda {
 //            case 3: return "THREE";
 //            default: return "GREATER THAN ZERO";
 //        }
+
+        // TODO Comment out the lines above and uncomment the lines below
+//        switch (request) {
+//            case 0: return "ZERO";
+//            case 2: return "TWO";
+//            case 3: return "THREE";
+//            case 4: return "FOUR";
+//            default: return "GREATER THAN ZERO";
+//        }
     }
 }

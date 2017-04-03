@@ -336,7 +336,138 @@ The tests should pass now with the new version of the function code deployed.
 
 ## <a name="TOC-VersionAlias"></a>Versioning and Aliasing the Function ##
 
-// TODO More to come with aliases.
+This section assumes that you have completed the the [Installation](#TOC-Installation) section above.
+
+In that section, we created a Lambda function with Terraform and updated it using Gradle and boto.
+
+However, we are still pushing our Lambda code to the $LATEST bucket. In this section we will use [Versioning and Aliases] (http://docs.aws.amazon.com/lambda/latest/dg/versioning-aliases.html) to target specific versions of our Lambda function.
+
+### 1. Publish a Version and Alias of the current Lambda code ###
+
+Now we will publish Version 1 of our Lambda function.
+
+a. From the root directory run `./gradlew publishLambdaStaging`
+
+The build should be successful and the version should be 1 as shown in the snippet below.
+ 
+```
+    "Runtime": "java8",
+    "Timeout": 10,
+    "Version": "1"
+}
+
+BUILD SUCCESSFUL
+
+```
+ 
+Now we will create an alias pointing to that version
+
+b. From the root directory run `./gradlew createAliasStaging -PaliasName=SAMPLE_ALIAS -PlambdaVersion=1`
+
+This will create an alias named `SAMPLE_ALIAS` and point that at the Version 1 you just published.
+
+You should see that the build succeeded with the following snippet in the output:
+
+```
+    "FunctionVersion": "1",
+    "Name": "SAMPLE_ALIAS",
+```
+
+Now we will change the test client to invoke the `SAMPLE_ALIAS` version of the Lambda.
+
+c. In the `src/test/java/com/hootsuite/example/lambda/environment/AWSLambdaInvoker.java` file, uncomment the line shown below to invoke the Function with the given alias.
+
+```
+                // TODO Uncomment to invoke Lambda with Alias
+//                .withQualifier(ALIAS)
+```
+
+d. Run the unit tests and ensure that they are all still passing. `./gradlew clean -PtestEnvironment=STAGING test`
+
+### 2. Change the Tests to expect different behavior ###
+
+Now we will add new expected behavior to our Lambda function. In the real world, this could be a bug that surfaced after publishing our Lambda client.
+
+a. In the `src/test/java/com/hootsuite/example/lambda/SampleTest.java` file, uncomment the lines shown below to add a new test.
+
+```
+    // TODO Uncomment to add a new test
+//    @Test
+//    public void fourTest() {
+//        assertEquals(STRING_MISMATCH, "FOUR", lambdaGenerator.invoke(4));
+//    }
+
+```
+
+b. Now run the unit tests and see that the new test is failing. `./gradlew clean -PtestEnvironment=STAGING test`
+
+Next, we will modify our function and redeploy it to fix the test.
+
+### 3. Update the Function Code Behavior ###
+
+a. In the `src/main/java/com/hootsuite/example/lambda/SampleLambda.java` file, uncomment the lines below and comment out the rest of the function above.
+
+```
+// TODO Comment out the lines above and uncomment the lines below
+//        switch (request) {
+//            case 0: return "ZERO";
+//            case 2: return "TWO";
+//            case 3: return "THREE";
+//            case 4: return "FOUR";
+//            default: return "GREATER THAN ZERO";
+//        }
+```
+
+Now we have added the functionality our tests expect.  
+
+b. Run `./gradlew clean -PtestEnvironment=LOCAL test`. Verify that all 5 tests now pass.
+
+c. Update the function version in the `build.gradle` file. Set the version to `1.0.2`
+
+```
+version = '1.0.2'
+```
+
+d. Upload the new function code to Staging run `./gradlew updateFunctionCodeStaging`
+
+e. Run the unit tests in the Staging Environment, run `./gradlew clean -PtestEnvironment=STAGING test`.
+ 
+One test should fail. Now that we have set our Java client to invoke the function alias, we will need to update the alias to fix the broken test.
+ 
+### 4. Update the Alias ###
+ 
+Now we will publish a new version of the function and update the alias to point to the new version.
+
+a. From the root directory run `./gradlew publishLambdaStaging`
+
+The build should be successful and the version should be 2 as shown in the snippet below.
+ 
+```
+    "Runtime": "java8",
+    "Timeout": 10,
+    "Version": "2"
+}
+
+BUILD SUCCESSFUL
+
+```
+
+Now we will update the alias pointing to that version
+
+b. From the root directory run `./gradlew updateAliasStaging -PaliasName=SAMPLE_ALIAS -PlambdaVersion=2`
+
+This will update the `SAMPLE_ALIAS` alias to point that at the Version 2 you just published.
+
+You should see that the build succeeded with the following snippet in the output:
+
+```
+    "FunctionVersion": "2",
+    "Name": "SAMPLE_ALIAS",
+```
+
+c. Now run the unit tests again by running, `./gradlew clean -PtestEnvironment=STAGING test`.
+
+This time all 5 tests should pass as the alias now points to the updated version of the function. The benefit of using aliases is that they are mutable, they can be updated to point to a new version of the function code and the client will automatically invoke the new version, without needing to be updated.
 
 ## <a name="TOC-License"></a>License ##
 
