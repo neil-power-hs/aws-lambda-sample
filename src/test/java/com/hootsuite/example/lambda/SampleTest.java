@@ -20,27 +20,27 @@ public class SampleTest {
 
     @Test
     public void zeroTest() {
-         assertEquals(STRING_MISMATCH, "ZERO", lambdaGenerator.invoke(0));
+         assertEquals(STRING_MISMATCH, "ZERO", lambdaGenerator.invoke(new SampleLambdaRequest(0)));
     }
 
     @Test
     public void nonZeroTest() {
-         assertEquals(STRING_MISMATCH, "GREATER THAN ZERO", lambdaGenerator.invoke(1));
+         assertEquals(STRING_MISMATCH, "GREATER THAN ZERO", lambdaGenerator.invoke(new SampleLambdaRequest(1)));
     }
 
     @Test
     public void twoTest() {
-         assertEquals(STRING_MISMATCH, "TWO", lambdaGenerator.invoke(2));
+         assertEquals(STRING_MISMATCH, "TWO", lambdaGenerator.invoke(new SampleLambdaRequest(2)));
     }
 
     @Test
     public void threeTest() {
-         assertEquals(STRING_MISMATCH, "THREE", lambdaGenerator.invoke(3));
+         assertEquals(STRING_MISMATCH, "THREE", lambdaGenerator.invoke(new SampleLambdaRequest(3)));
     }
 
     // TODO Uncomment to add a new test
 //    @Test
 //    public void fourTest() {
-//        assertEquals(STRING_MISMATCH, "FOUR", lambdaGenerator.invoke(4));
+//        assertEquals(STRING_MISMATCH, "FOUR", lambdaGenerator.invoke(new SampleLambdaRequest(4)));
 //    }
 }

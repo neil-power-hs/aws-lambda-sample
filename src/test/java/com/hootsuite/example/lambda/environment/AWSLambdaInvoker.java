@@ -4,6 +4,7 @@ import com.amazonaws.regions.Regions;
 import com.amazonaws.services.lambda.AWSLambda;
 import com.amazonaws.services.lambda.AWSLambdaClientBuilder;
 import com.amazonaws.services.lambda.model.InvokeRequest;
+import com.hootsuite.example.lambda.SampleLambdaRequest;
 
 import java.nio.charset.StandardCharsets;
 
@@ -42,7 +43,7 @@ class AWSLambdaInvoker implements LambdaGenerator {
     }
 
     @Override
-    public String invoke(int input) {
+    public String invoke(SampleLambdaRequest input) {
         byte[] bytes = awsLambda.invoke(invokeRequest.withPayload(String.valueOf(input))).getPayload().array();
         return new String(bytes, StandardCharsets.UTF_8).replace("\"", "");
     }

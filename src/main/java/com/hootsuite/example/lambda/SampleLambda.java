@@ -5,10 +5,10 @@ import com.amazonaws.services.lambda.runtime.Context;
 @SuppressWarnings("Unused")
 public class SampleLambda {
 
-    public static String invokeFunction(int request, @SuppressWarnings("unused") Context context) {
-         return (request == 0) ? "ZERO" : "GREATER THAN ZERO";
+    public static String invokeFunction(SampleLambdaRequest request, @SuppressWarnings("unused") Context context) {
+         return (request.getInput() == 0) ? "ZERO" : "GREATER THAN ZERO";
         // TODO STEP 10 Comment out the line above and uncomment the lines below
-//        switch (request) {
+//        switch (request.getInput()) {
 //            case 0: return "ZERO";
 //            case 2: return "TWO";
 //            case 3: return "THREE";
@@ -16,7 +16,7 @@ public class SampleLambda {
 //        }
 
         // TODO Comment out the lines above and uncomment the lines below
-//        switch (request) {
+//        switch (request.getInput()) {
 //            case 0: return "ZERO";
 //            case 2: return "TWO";
 //            case 3: return "THREE";
