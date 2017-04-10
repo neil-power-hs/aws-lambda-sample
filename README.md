@@ -7,6 +7,7 @@
 * [Installation](#TOC-Installation)
 * [Running and Modifying the Function](#TOC-RunModify)
 * [Versioning and Aliasing the Function](#TOC-VersionAlias)
+* [Using API Gateway to invoke the Function](#TOC-APIGateway)
 * [License](#TOC-License)
 * [Create AWS User to run Terraform](#TOC-CreateUser)
 
@@ -468,6 +469,40 @@ You should see that the build succeeded with the following snippet in the output
 c. Now run the unit tests again by running, `./gradlew clean -PtestEnvironment=STAGING test`.
 
 This time all 5 tests should pass as the alias now points to the updated version of the function. The benefit of using aliases is that they are mutable, they can be updated to point to a new version of the function code and the client will automatically invoke the new version, without needing to be updated.
+
+## <a name="TOC-APIGateway"></a>Using API Gateway to invoke the Function ##
+
+In this section we will create an [API Gateway](https://aws.amazon.com/api-gateway/) which invokes the Lambda function we created in the previous steps. We will then be able to invoke the Lambda function with REST calls.
+ 
+### 1. Run Terraform to create API Gateway Infrastructure ###
+ 
+a. In the `terraform/gateway.tf` file, uncomment the contents of the file.
+
+b. In your terminal, `cd` into the `terraform` directory.
+
+c. Run the terraform plan: `terraform plan --var-file="../aws_secrets.tfvars" -var-file="env/staging.tfvars"`
+ 
+If successful, you should see: 
+
+```
+Plan: 9 to add, 0 to change, 0 to destroy.
+```
+
+d. Apply the plan: `terraform apply --var-file="../aws_secrets.tfvars" -var-file="env/staging.tfvars"`
+
+### 2. Use curl to invoke the Lambda function through API Gateway. ###
+
+In the output of the previous apply, you should see a `aws_api_gateway_deployment.sample_lambda_deployment` section.
+
+In that section, look for `rest_api_id`
+
+a. Copy the `rest_api_id`, it should look something like `c8gm8f8us9`.
+
+b. In the terminal enter the following curl command and replace `<rest_api_id>` with the id you just copied.
+
+`curl -d '{"input": 4}' -H "Content-Type: application/json" -X POST https://<rest_api_id>.execute-api.us-east-1.amazonaws.com/staging/sample_lambda`
+
+You should see `"FOUR"` as the output, just as if you had invoked the Lambda directly.
 
 ## <a name="TOC-License"></a>License ##
 
