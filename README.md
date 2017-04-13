@@ -8,6 +8,7 @@
 * [Running and Modifying the Function](#TOC-RunModify)
 * [Versioning and Aliasing the Function](#TOC-VersionAlias)
 * [Using API Gateway to invoke the Function](#TOC-APIGateway)
+* [Using API Gateway with Lambda Aliases](#TOC-APIGatewayAlias)
 * [License](#TOC-License)
 * [Create AWS User to run Terraform](#TOC-CreateUser)
 
@@ -290,15 +291,14 @@ Now we will modify the Lambda function code to exhibit the expected behavior.
 a. Now we'll change the Lambda function. In `src/main/java/com/hootsuite/example/lambda/SampleLambda.java` comment out line 9 and uncomment lines 11-16 inlcusive, so that the lines look like the following:
 
 ```
-//         return (request == 0) ? "ZERO" : "GREATER THAN ZERO";
+//         return (request.getInput() == 0) ? "ZERO" : "GREATER THAN ZERO";
         // TODO STEP 10 Comment out the line above and uncomment the lines below
-        switch (request) {
+        switch (request.getInput()) {
             case 0: return "ZERO";
             case 2: return "TWO";
             case 3: return "THREE";
             default: return "GREATER THAN ZERO";
         }
-
 ```
 
 Now we're adding the expected behavior of outputting the numbers "TWO" and "THREE". In the real world this could be fixing a bug that we've previously deployed.
@@ -341,7 +341,7 @@ This section assumes that you have completed the the [Installation](#TOC-Install
 
 In that section, we created a Lambda function with Terraform and updated it using Gradle and boto.
 
-However, we are still pushing our Lambda code to the $LATEST bucket. In this section we will use [Versioning and Aliases] (http://docs.aws.amazon.com/lambda/latest/dg/versioning-aliases.html) to target specific versions of our Lambda function.
+However, we are still pushing our Lambda code to the $LATEST bucket. In this section we will use [Versioning and Aliases](http://docs.aws.amazon.com/lambda/latest/dg/versioning-aliases.html) to target specific versions of our Lambda function.
 
 ### 1. Publish a Version and Alias of the current Lambda code ###
 
@@ -393,11 +393,10 @@ a. In the `src/test/java/com/hootsuite/example/lambda/SampleTest.java` file, unc
 
 ```
     // TODO Uncomment to add a new test
-//    @Test
-//    public void fourTest() {
-//        assertEquals(STRING_MISMATCH, "FOUR", lambdaGenerator.invoke(4));
-//    }
-
+    @Test
+    public void fourTest() {
+        assertEquals(STRING_MISMATCH, "FOUR", lambdaGenerator.invoke(new SampleLambdaRequest(4)));
+    }
 ```
 
 b. Now run the unit tests and see that the new test is failing. `./gradlew clean -PtestEnvironment=STAGING test`
@@ -409,14 +408,14 @@ Next, we will modify our function and redeploy it to fix the test.
 a. In the `src/main/java/com/hootsuite/example/lambda/SampleLambda.java` file, uncomment the lines below and comment out the rest of the function above.
 
 ```
-// TODO Comment out the lines above and uncomment the lines below
-//        switch (request) {
-//            case 0: return "ZERO";
-//            case 2: return "TWO";
-//            case 3: return "THREE";
-//            case 4: return "FOUR";
-//            default: return "GREATER THAN ZERO";
-//        }
+        // TODO Comment out the lines above and uncomment the lines below
+        switch (request.getInput()) {
+            case 0: return "ZERO";
+            case 2: return "TWO";
+            case 3: return "THREE";
+            case 4: return "FOUR";
+            default: return "GREATER THAN ZERO";
+        }
 ```
 
 Now we have added the functionality our tests expect.  
@@ -472,6 +471,8 @@ This time all 5 tests should pass as the alias now points to the updated version
 
 ## <a name="TOC-APIGateway"></a>Using API Gateway to invoke the Function ##
 
+This section assumes you have previously completed the steps in the [Versioning and Aliasing](#TOC-VersionAlias) section above.
+
 In this section we will create an [API Gateway](https://aws.amazon.com/api-gateway/) which invokes the Lambda function we created in the previous steps. We will then be able to invoke the Lambda function with REST calls.
  
 ### 1. Run Terraform to create API Gateway Infrastructure ###
@@ -503,6 +504,55 @@ b. In the terminal enter the following curl command and replace `<rest_api_id>` 
 `curl -d '{"input": 4}' -H "Content-Type: application/json" -X POST https://<rest_api_id>.execute-api.us-east-1.amazonaws.com/staging/sample_lambda`
 
 You should see `"FOUR"` as the output, just as if you had invoked the Lambda directly.
+
+## <a name="TOC-APIGatewayAlias"></a>Using API Gateway with Lambda Aliases ##
+
+This section assumes you have previously completed the steps in the [Using API Gateway](#TOC-APIGateway) section above.
+
+In the previous section we saw that we could create an API Gateway which allows us to invoke our AWS Lambda function through REST calls. We tested this by using curl to send a request to API Gateway.
+
+In this section we will see how we can set-up API Gateway deployments to point to AWS Lambda aliases.
+
+### 1. Use Terraform to Create a New API Gateway Deployment ###
+
+a. In the `terraform/deployments.tf` file, uncomment the contents of the file.
+
+There are two blocks in this file, one is the gateway deployment and the other is the permission for API Gateway to invoke the given Lamdba alias.
+
+b. `cd` into the `terraform` directory
+
+c. Run the terraform plan: `terraform plan --var-file="../aws_secrets.tfvars" -var-file="env/staging.tfvars"`
+
+If successful, you should see: 
+
+```
+Plan: 3 to add, 0 to change, 1 to destroy.
+```
+
+d. Apply the plan: `terraform apply --var-file="../aws_secrets.tfvars" -var-file="env/staging.tfvars"`
+
+### 2. Use curl to invoke the Lambda function through API Gateway. ###
+
+In the output of the previous apply, you should see a `aws_api_gateway_deployment.sample_lambda_deployment` section.
+
+In that section, look for `rest_api_id`
+
+a. Copy the `rest_api_id`, it should look something like `c8gm8f8us9`.
+
+b. In the terminal enter the following curl command and replace `<rest_api_id>` with the id you just copied.
+
+`curl -d '{"input": 4}' -H "Content-Type: application/json" -X POST https://<rest_api_id>.execute-api.us-east-1.amazonaws.com/alias_example/sample_lambda`
+
+You should see `"FOUR"` as the output, just as if you had invoked the Lambda directly.
+
+If you wanted to add additional deployments to different Lambda aliases, you can copy the two blocks in the `deployments.tf` file.
+
+You will need to change two things:
+
+1. All instances of `SAMPLE_ALIAS` to your alias. `SAMPLE_ALIAS` -> `<your alias>`
+2. Change `stage_name` to whatever you want in your URL path. `alias_example` -> `<new stage name>`
+
+Now you can use API Gateway to invoke any Lambda alias you deploy!
 
 ## <a name="TOC-License"></a>License ##
 
