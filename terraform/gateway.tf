@@ -1,31 +1,8 @@
-// TODO Uncomment to create API Gateway
-//resource "aws_lambda_permission" "apiGatewayLambdaPermission" {
-//  statement_id = "AllowExecutionFromAPIGateway"
-//  action = "lambda:InvokeFunction"
-//  function_name = "${aws_lambda_function.sample_lambda.arn}"
-//  principal = "apigateway.amazonaws.com"
-//
-//  source_arn = "arn:aws:execute-api:${var.region}:${var.account}:${aws_api_gateway_rest_api.sample_lambda_api.id}/*/*/*"
-//}
+//// TODO Uncomment to create API Gateway
 //
 //resource "aws_api_gateway_rest_api" "sample_lambda_api" {
 //  name = "sample_lambda_api_${var.env}"
 //  description = "A gateway to use a lambda function to convert Twitter Search string to JSON model and vice versa."
-//}
-//
-//resource "aws_api_gateway_deployment" "sample_lambda_deployment" {
-//  depends_on = [
-//    "aws_api_gateway_method.sample_lambda_post",
-//    "aws_api_gateway_integration.sample_lambda_integration",
-//    "aws_api_gateway_integration_response.sample_lambda_integration_response",
-//    "aws_api_gateway_method_response.sample_lambda_post_200"
-//  ]
-//
-//  rest_api_id = "${aws_api_gateway_rest_api.sample_lambda_api.id}"
-//  stage_name = "${var.env}"
-//
-//  # forces a new deployment each run
-//  stage_description = "${timestamp()}"
 //}
 //
 //resource "aws_api_gateway_resource" "sample_lambda_resource" {
@@ -80,4 +57,30 @@
 //  "type" : "object"
 //}
 //EOF
+//}
+//
+//# Basic deployment and permission for hitting $LATEST of Lambda function
+//
+//resource "aws_api_gateway_deployment" "sample_lambda_deployment" {
+//  depends_on = [
+//    "aws_api_gateway_method.sample_lambda_post",
+//    "aws_api_gateway_integration.sample_lambda_integration",
+//    "aws_api_gateway_integration_response.sample_lambda_integration_response",
+//    "aws_api_gateway_method_response.sample_lambda_post_200"
+//  ]
+//
+//  rest_api_id = "${aws_api_gateway_rest_api.sample_lambda_api.id}"
+//  stage_name = "${var.env}"
+//
+//  # forces a new deployment each run
+//  stage_description = "${timestamp()}"
+//}
+//
+//resource "aws_lambda_permission" "sample_lambda_permission" {
+//  statement_id = "AllowExecutionFromAPIGateway"
+//  action = "lambda:InvokeFunction"
+//  function_name = "${aws_lambda_function.sample_lambda.arn}"
+//  principal = "apigateway.amazonaws.com"
+//
+//  source_arn = "arn:aws:execute-api:${var.region}:${var.account}:${aws_api_gateway_rest_api.sample_lambda_api.id}/*/*/*"
 //}
