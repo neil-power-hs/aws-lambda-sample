@@ -517,7 +517,11 @@ In this section we will see how we can set-up API Gateway deployments to point t
 
 a. In the `terraform/deployments.tf` file, uncomment the contents of the file.
 
-There are two blocks in this file, one is the gateway deployment and the other is the permission for API Gateway to invoke the given Lamdba alias.
+There are two blocks in this file, one is the gateway deployment and the other is the permission for API Gateway to invoke the given Lambda alias.
+
+The first block is used to expose the Lambdas alias through a specified request url path.
+
+The second is to allow your lambda function to be invoked through calls from API Gateway.
 
 b. `cd` into the `terraform` directory
 
@@ -541,18 +545,80 @@ a. Copy the `rest_api_id`, it should look something like `c8gm8f8us9`.
 
 b. In the terminal enter the following curl command and replace `<rest_api_id>` with the id you just copied.
 
-`curl -d '{"input": 4}' -H "Content-Type: application/json" -X POST https://<rest_api_id>.execute-api.us-east-1.amazonaws.com/alias_example/sample_lambda`
+`curl -d '{"input": 4}' -H "Content-Type: application/json" -X POST https://<rest_api_id>.execute-api.us-east-1.amazonaws.com/SAMPLE_ALIAS/sample_lambda`
 
 You should see `"FOUR"` as the output, just as if you had invoked the Lambda directly.
 
-If you wanted to add additional deployments to different Lambda aliases, you can copy the two blocks in the `deployments.tf` file.
+### 3. Create additional Gateway deployments for new aliases. ###
 
-You will need to change two things:
+If you wanted to add additional deployments to different Lambda aliases, you can do so by creating a new Lambda alias and adding two blocks to the `terraform/deployments.tf` file.
 
-1. All instances of `SAMPLE_ALIAS` to your alias. `SAMPLE_ALIAS` -> `<your alias>`
-2. Change `stage_name` to whatever you want in your URL path. `alias_example` -> `<new stage name>`
+We will create a new Lambda alias, `NEW_ALIAS` to point to the same Lambda version as `SAMPLE_ALIAS`. In a real production environment they would point at two different versions.
 
-Now you can use API Gateway to invoke any Lambda alias you deploy!
+a. Run `./gradlew createAliasStaging -PaliasName=NEW_ALIAS -PlambdaVersion=2` from the root project directory.
+
+You should see that the build is successful, now we have a new alias, `NEW_ALIAS` for our Lambda function.
+
+Next we will add two blocks to the `terraform/deployments.tf` file. Anytime you wish to invoke a new alias from API Gateway, you will need to add these two blocks.
+
+One is for the actual API Gateway deployment to invoke the given alias. The other gives permission to API Gateway to invoke the Lambda alias of your function.
+
+If you add your own alias, you will need to change all instances of `NEW_ALIAS` to your alias name. 
+
+b. Add the blocks below to the `terraform/deployments.tf` file.  
+
+```hcl
+resource "aws_api_gateway_deployment" "sample_lambda_deployment_NEW_ALIAS" {
+  depends_on = ["aws_api_gateway_integration.sample_lambda_integration"]
+
+  rest_api_id = "${aws_api_gateway_rest_api.sample_lambda_api.id}"
+  stage_name = "NEW_ALIAS"
+
+  variables {
+    "lambdaAlias" = "NEW_ALIAS"
+  }
+
+  # forces a new deployment each run
+  stage_description = "${timestamp()}"
+}
+
+resource "aws_lambda_permission" "sample_lambda_permission_NEW_ALIAS" {
+  statement_id = "AllowExecutionFromAPIGateway"
+  action = "lambda:InvokeFunction"
+  function_name = "${aws_lambda_function.sample_lambda.arn}"
+  principal = "apigateway.amazonaws.com"
+
+  source_arn = "arn:aws:execute-api:${var.region}:${var.account}:${aws_api_gateway_rest_api.sample_lambda_api.id}/*/*/*"
+
+  qualifier = "NEW_ALIAS"
+}
+```
+
+After adding the blocks, you will need to run terraform to create the additional infrastructure.
+
+b. `cd` into the `terraform` directory
+
+c. Run the terraform plan: `terraform plan --var-file="../aws_secrets.tfvars" -var-file="env/staging.tfvars"`
+
+If successful, you should see: 
+
+```
+Plan: 4 to add, 0 to change, 2 to destroy.
+```
+
+d. Apply the plan: `terraform apply --var-file="../aws_secrets.tfvars" -var-file="env/staging.tfvars"`
+
+After running terraform your new alias will be part of the url path: 
+
+`https://<rest_api_id>.execute-api.us-east-1.amazonaws.com/NEW_ALIAS/sample_lambda`
+
+You can then curl the new alias with the curl call below.
+
+`curl -d '{"input": 4}' -H "Content-Type: application/json" -X POST https://<rest_api_id>.execute-api.us-east-1.amazonaws.com/NEW_ALIAS/sample_lambda`
+
+e. You should see `"FOUR"` as the curl result.
+
+If you add your own Lambda Alias deployments to API Gateway, they will each have their own path.
 
 ## <a name="TOC-License"></a>License ##
 
@@ -650,10 +716,12 @@ c. Where it says `<paste policy here>`, paste the JSON snippet below.
                 "lambda:CreateAlias",
                 "lambda:DeleteAlias",
                 "lambda:GetAlias",
+                "lambda:GetPolicy",
                 "lambda:InvokeFunction",
                 "lambda:ListAliases",
                 "lambda:ListVersionsByFunction",
                 "lambda:PublishVersion",
+                "lambda:RemovePermission",
                 "lambda:UpdateAlias",
                 "lambda:UpdateFunctionCode"
             ],
@@ -683,6 +751,19 @@ c. Where it says `<paste policy here>`, paste the JSON snippet below.
                 "iam:PutUserPolicy",
                 "iam:PassRole",
                 "iam:PutRolePolicy"
+            ],
+            "Resource": [
+                "*"
+            ]
+        },
+        {
+            "Sid": "APIGatewayManagement",
+            "Effect": "Allow",
+            "Action": [
+                "apigateway:POST",
+                "apigateway:GET",
+                "apigateway:PUT",
+                "apigateway:DELETE"
             ],
             "Resource": [
                 "*"

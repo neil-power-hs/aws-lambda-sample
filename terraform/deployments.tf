@@ -6,7 +6,7 @@
 //  depends_on = ["aws_api_gateway_integration.sample_lambda_integration"]
 //
 //  rest_api_id = "${aws_api_gateway_rest_api.sample_lambda_api.id}"
-//  stage_name = "alias_example"
+//  stage_name = "SAMPLE_ALIAS"
 //
 //  variables {
 //    "lambdaAlias" = "SAMPLE_ALIAS"
